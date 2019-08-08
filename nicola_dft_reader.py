@@ -11,9 +11,7 @@ from pyscf import lib
 from pyscf import df
 from pyscf.tools import cubegen
 import numpy as np
-import csv
-from os import listdir
-from os.path import isfile, join
+import os
 
 def dist(v1, v2=(0,0,0)):
     '''Returns the distance between two points in 3D space;
@@ -137,33 +135,17 @@ def CalcIsosurface(cube_data, dim_array, potential=0.002, tol=0.0002):
     mol_volume = nvox*dist(x_vec)*dist(y_vec)*dist(z_vec)
     return isosurface, mol_volume
 
-def SaveResults(results, basis):
-    '''Save extracted results to a .csv file with the InchiKey. Suffixed with
-       the basis used.
-    '''
-    with open('results_{:}.csv'.format(basis), 'w') as db:
-          writer = csv.writer(db)
-          writer.writerows(results)
-    db.close()
-    pass
-
-results = []
-#load files and extract atom coordinates and the inchikey
-onlyfiles = [f for f in listdir('nicola') if isfile(join('nicola', f))]
-files = [i for i in onlyfiles if '.pdb' in i]
-
-for file in files:
+def calc(file, basis):
     atom_coords = getAtomCoordsfromPDB('nicola/'+file)
     key = file.split('.')[0][1:]
     print('Loading {:} ...'.format(file))
-    
-    basis = '6-311g**'
     
     #optimise in chosen basis, calculate density in cube file, convert to array and then output chosen isosurface
     print('Building molecule in {:} basis'.format(basis.upper()))
     molecule, method = BuildandOptimise(atom_coords, basis)
     cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1())
     array, dim_array = ConvertCubetoArray('{:}_den.cube'.format(key))
+    os.remove('{:}_den.cube'.format(key))
     print('Generating isosurface ...  ', end='')
     isosurface, volume = CalcIsosurface(array, dim_array)
     del array
@@ -179,7 +161,7 @@ for file in files:
     potentials = np.transpose(mep_arr)[0]
     potmax = max(potentials)
     potmin = min(potentials)
-    results.append([key, potmax, potmin])
+    result = [key, potmax, potmin]
     print('Job complete:\n  InchiKey: {:}\n  Max. Pot: {:}\n  Min. Pot: {:}\n'.format(key, potmax, potmin))
     
-SaveResults(results, basis)
+    return result
