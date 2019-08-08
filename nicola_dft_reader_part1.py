@@ -111,7 +111,7 @@ def ConvertCubetoArray(cube):
     
     return test_cube, dim_array
 
-def CalcIsosurface(cube_data, dim_array, potential=0.002, tol=0.0005):
+def CalcIsosurface(cube_data, dim_array, potential=0.002, tol=0.0002):
     '''Calculate the density isosurface from the .cube data.
     '''
     isosurface = np.empty([0,4])
@@ -160,17 +160,21 @@ for file in files[:250]:
     basis = '6-311+g**'
     
     #optimise in chosen basis, calculate density in cube file, convert to array and then output chosen isosurface
-    print('Building molecule in {:} basis'.format(basis.upper))
+    print('Building molecule in {:} basis'.format(basis.upper()))
     molecule, method = BuildandOptimise(atom_coords, basis)
     cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1())
     array, dim_array = ConvertCubetoArray('{:}_den.cube'.format(key))
     print('Generating isosurface ...  ', end='')
     isosurface, volume = CalcIsosurface(array, dim_array)
+    del array
     print('Complete')
                     
     #call function that produces numpy array with potential at index 0, followed by x, y, and z coordinates
     print('Generating molecular electrostatic potential surface...  ', end='')
     mep_arr = mep(isosurface, molecule, method.make_rdm1())
+    del isosurface
+    del molecule
+    del method
     print('Complete')
     potentials = np.transpose(mep_arr)[0]
     potmax = max(potentials)
