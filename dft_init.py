@@ -26,8 +26,8 @@ onlyfiles = [f for f in listdir('nicola') if isfile(join('nicola', f))]
 files = [i for i in onlyfiles if '.pdb' in i]
 
 basis = '6-311g**'
-start = input("Enter index of first file: ")
-end = input("Enter index of final file: ")
+start = int(input("Enter index of first file: "))
+end = int(input("Enter index of final file: "))
 
 for file in files[start:end]:
     result = nicola_dft_reader.calc(file, basis)
