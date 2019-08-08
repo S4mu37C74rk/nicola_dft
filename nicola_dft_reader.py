@@ -157,7 +157,7 @@ for file in files:
     key = file.split('.')[0][1:]
     print('Loading {:} ...'.format(file))
     
-    basis = '6-311+g**'
+    basis = '6-311g**'
     
     #optimise in chosen basis, calculate density in cube file, convert to array and then output chosen isosurface
     print('Building molecule in {:} basis'.format(basis.upper()))
