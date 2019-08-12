@@ -7,8 +7,6 @@ Created on Thu Aug  8 16:17:52 2019
 """
 import csv
 import nicola_dft_reader
-from os import listdir
-from os.path import isfile, join
 
 def SaveResults(results, basis):
     '''Save extracted results to a .csv file with the InchiKey. Suffixed with
