@@ -22,6 +22,7 @@ files = [i for i in onlyfiles if 'complete.csv' in i]
 rows = []
 rows.append([file[:file.index('_com')] for file in sorted(files)])
 rows[0].insert(0, '')
+rows[0].append('Experiment')
 
 for key in keys:
     row = [key]
@@ -32,17 +33,25 @@ for key in keys:
             data = [row[2] for row in reader if row[0] == key]
             if 'ATX' in file:
                 try: 
-                    datum = '{:.9f}'.format(-1*abs(float(data[0]))/KCALMOL2HARTREE)
+                    datum = '{:.9f}'.format(abs(float(data[0]))/KCALMOL2HARTREE)
                     row.append(datum)
                 except:
                     row.append(None)
             else:
                 try: 
-                    datum = '{:.9f}'.format(-1*abs(float(data[0])))
+                    datum = '{:.9f}'.format(abs(float(data[0])))
                     row.append(datum)
                 except:
                     row.append(None)
         f.close()
+
+    with open('nicola/_{:}.metadata'.format(key)) as meta:
+        lineList = meta.readlines()
+        betavals = [line for line in lineList if 'ExpBeta' in line]
+        beta = float(betavals[0][15:].strip())
+        row.append(beta)
+        meta.close()
+
     rows.append(row)    
 
 with open('all_data.csv', 'w') as db:

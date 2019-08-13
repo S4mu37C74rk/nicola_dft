@@ -9,9 +9,14 @@ from pyscf import gto
 from pyscf import dft
 from pyscf import lib
 from pyscf import df
+from pyscf import __config__
+
+setattr(__config__, 'cubegen_box_margin', 5.0)
 from pyscf.tools import cubegen
 import numpy as np
 import os
+from os import listdir
+from os.path import isfile, join
 
 def dist(v1, v2=(0,0,0)):
     '''Returns the distance between two points in 3D space;
@@ -76,7 +81,7 @@ def BuildandOptimise(atomcoordinates, basis):
     method = dft.RKS(molecule)
     method.grids.prune = dft.gen_grid.treutler_prune
     method.grids.atom_grid = {"H": (50, 194), "O": (50, 194),}
-    method.xc = 'b3lypg'
+    method.xc = 'wB97x'
     method.scf()
     
     return molecule, method
@@ -91,11 +96,9 @@ def ConvertCubetoArray(cube):
         infoList = lineList[2:6+natom]
         dataList = lineList[6+natom:]
         
-        dims = [item.split("   ")[1:] for item in infoList[1:4]]
-        x, x_vec = int(dims[0][0]), np.asarray([float(i) for i in dims[0][1:]])
-        y, y_vec = int(dims[1][0]), np.asarray([float(i) for i in dims[1][1:]])
-        z, z_vec = int(dims[2][0]), np.asarray([float(i) for i in dims[2][1:]])
-        dim_array = [[x, x_vec], [y, y_vec], [z, z_vec]]
+        dims = [[item[:7], item[7:19], item[19:31], item[31:]] for item in infoList[1:4]]
+        dim_array = [[int(item[0].strip()), np.asarray([float(i.strip()) for i in item[1:]])] for item in dims]
+        x, y = dim_array[0][0], dim_array[1][0]
         
         test_cube = []
         for line in dataList:
@@ -143,9 +146,10 @@ def calc(file, basis):
     #optimise in chosen basis, calculate density in cube file, convert to array and then output chosen isosurface
     print('Building molecule in {:} basis'.format(basis.upper()))
     molecule, method = BuildandOptimise(atom_coords, basis)
-    cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1())
+    cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1(), resolution=(1/6))
+    #cubegen.mep(molecule, '{:}_pot.cube'.format(key), method.make_rdm1(), resolution=(1/6))
     array, dim_array = ConvertCubetoArray('{:}_den.cube'.format(key))
-    os.remove('{:}_den.cube'.format(key))
+    #os.remove('{:}_den.cube'.format(key))
     print('Generating isosurface ...  ', end='')
     isosurface, volume = CalcIsosurface(array, dim_array)
     del array
