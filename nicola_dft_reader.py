@@ -77,7 +77,7 @@ def BuildandOptimise(atomcoordinates, basis):
     '''
     molecule = gto.M(atom=atomcoordinates, basis=basis, unit='Angstrom')
     molecule.build()
-    molecule.verbose = 0
+    molecule.verbose = 5
     method = dft.RKS(molecule)
     method.grids.prune = dft.gen_grid.treutler_prune
     method.grids.atom_grid = {"H": (50, 194), "O": (50, 194),}
@@ -112,7 +112,7 @@ def ConvertCubetoArray(cube):
     
     return test_cube, dim_array
 
-def CalcIsosurface(cube_data, dim_array, potential=0.002, tol=0.0002):
+def CalcIsosurface(cube_data, dim_array, potential=0.002, tol=0.00005):
     '''Calculate the density isosurface from the .cube data.
     '''
     isosurface = np.empty([0,4])
@@ -147,7 +147,6 @@ def calc(file, basis):
     print('Building molecule in {:} basis'.format(basis.upper()))
     molecule, method = BuildandOptimise(atom_coords, basis)
     cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1(), resolution=(1/6))
-    #cubegen.mep(molecule, '{:}_pot.cube'.format(key), method.make_rdm1(), resolution=(1/6))
     array, dim_array = ConvertCubetoArray('{:}_den.cube'.format(key))
     #os.remove('{:}_den.cube'.format(key))
     print('Generating isosurface ...  ', end='')
@@ -157,7 +156,9 @@ def calc(file, basis):
                     
     #call function that produces numpy array with potential at index 0, followed by x, y, and z coordinates
     print('Generating molecular electrostatic potential surface...  ', end='')
+    print(isosurface)
     mep_arr = mep(isosurface, molecule, method.make_rdm1())
+    print(mep_arr)
     del isosurface
     del molecule
     del method
@@ -169,3 +170,9 @@ def calc(file, basis):
     print('Job complete:\n  InchiKey: {:}\n  Max. Pot: {:}\n  Min. Pot: {:}\n'.format(key, potmax, potmin))
     
     return result
+
+#load files and extract atom coordinates and the inchikey
+onlyfiles = [f for f in listdir('nicola') if isfile(join('nicola', f))]
+files = sorted([i for i in onlyfiles if '.pdb' in i])
+
+print(calc(files[354], '6-31g*'))
