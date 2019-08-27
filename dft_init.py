@@ -9,6 +9,12 @@ import csv
 import nicola_dft_reader
 from os import listdir
 from os.path import isfile, join
+import time
+import logging
+
+logging.basicConfig()
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 
 def SaveResults(results, basis):
     '''Save extracted results to a .csv file with the InchiKey. Suffixed with
@@ -30,14 +36,19 @@ for file in files:
     if search == '':
         break
     elif search in file:
-        print("Requested file at index {:}".format(files.index(file)))
+        LOGGER.info("Requested file at index {:}".format(files.index(file)))
 
-basis = 'def2-TZVPP'
+basis = '6-311G**'
 start = int(input("Enter index of first file: "))
 end = int(input("Enter index of final file: "))
 
 for file in files[start:end]:
-    result = nicola_dft_reader.calc(file, basis)
+    LOGGER.info("Molecule started {:}".format(time.ctime()))
+    result = nicola_dft_reader.calc(file, basis, 0)
+    result2 = nicola_dft_reader.calc(file, basis, 1)
+    result3 = nicola_dft_reader.calc(file, basis, 2)
     results.append(result)
+    results.append(result2)
+    results.append(result3)
 
-#SaveResults(results, basis)
+SaveResults(results, basis)

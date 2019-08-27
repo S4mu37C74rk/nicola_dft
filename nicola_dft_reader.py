@@ -14,9 +14,11 @@ from pyscf import __config__
 setattr(__config__, 'cubegen_box_margin', 5.0)
 from pyscf.tools import cubegen
 import numpy as np
-import os
-from os import listdir
-from os.path import isfile, join
+import logging
+
+logging.basicConfig()
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 
 def dist(v1, v2=(0,0,0)):
     '''Returns the distance between two points in 3D space;
@@ -55,18 +57,29 @@ def mep(surface, mol, dm):
     
     return mep_arr
 
-def getAtomCoordsfromPDB(file):
+def getCoords(atom_info, cycle):
+    '''Fetch coords, also performing a rotation according to the cycle
+    '''
+    x = float(atom_info[27:38].strip())
+    y = float(atom_info[38:46].strip())
+    z = float(atom_info[46:54].strip())
+    vec = [x,y,z]
+    
+    return vec[(0+cycle)%3], vec[(1+cycle)%3], vec[(2+cycle)%3]
+
+def getAtomCoordsfromPDB(file, cycle):
     '''Extract atom information from the PDB input file.
     '''
     with open(file) as f:
         lineList = f.readlines()
         data = [item for item in lineList if item[:6] == 'HETATM']
+        
         atom_coords = ''
         for n in data:
-            atom_coords += '     '+n.strip()[12:14]
-            atom_coords += n.strip()[27:38]+','
-            atom_coords += n.strip()[38:46]+','
-            atom_coords += n.strip()[46:54]+';\n'
+            atom_info = n.strip()
+            x, y, z = getCoords(atom_info, cycle)
+            atom_coords += '     '+atom_info[12:14]+' '+str(x)+', '+str(y)+', '+str(z)+';\n'
+            
     f.close()    
         
     return(atom_coords)
@@ -77,7 +90,7 @@ def BuildandOptimise(atomcoordinates, basis):
     '''
     molecule = gto.M(atom=atomcoordinates, basis=basis, unit='Angstrom')
     molecule.build()
-    molecule.verbose = 5
+    molecule.verbose = 0
     method = dft.RKS(molecule)
     method.grids.prune = dft.gen_grid.treutler_prune
     method.grids.atom_grid = {"H": (50, 194), "O": (50, 194),}
@@ -138,41 +151,35 @@ def CalcIsosurface(cube_data, dim_array, potential=0.002, tol=0.00005):
     mol_volume = nvox*dist(x_vec)*dist(y_vec)*dist(z_vec)
     return isosurface, mol_volume
 
-def calc(file, basis):
-    atom_coords = getAtomCoordsfromPDB('nicola/'+file)
+def calc(file, basis, cycle):
+    atom_coords = getAtomCoordsfromPDB('nicola/'+file, cycle)
     key = file.split('.')[0][1:]
-    print('Loading {:} ...'.format(file))
+    LOGGER.info('Loading {:} ...'.format(file))
     
     #optimise in chosen basis, calculate density in cube file, convert to array and then output chosen isosurface
-    print('Building molecule in {:} basis'.format(basis.upper()))
+    LOGGER.info('Building molecule in {:} basis'.format(basis.upper()))
     molecule, method = BuildandOptimise(atom_coords, basis)
     cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1(), resolution=(1/6))
     array, dim_array = ConvertCubetoArray('{:}_den.cube'.format(key))
     #os.remove('{:}_den.cube'.format(key))
-    print('Generating isosurface ...  ', end='')
+    LOGGER.info('Generating isosurface ...  ', end='')
     isosurface, volume = CalcIsosurface(array, dim_array)
     del array
-    print('Complete')
+    LOGGER.info('Complete')
                     
     #call function that produces numpy array with potential at index 0, followed by x, y, and z coordinates
-    print('Generating molecular electrostatic potential surface...  ', end='')
-    print(isosurface)
+    LOGGER.info('Generating molecular electrostatic potential surface...  ', end='')
+    LOGGER.debug(isosurface)
     mep_arr = mep(isosurface, molecule, method.make_rdm1())
-    print(mep_arr)
+    LOGGER.debug(mep_arr)
     del isosurface
     del molecule
     del method
-    print('Complete')
+    LOGGER.info('Complete')
     potentials = np.transpose(mep_arr)[0]
     potmax = max(potentials)
     potmin = min(potentials)
     result = [key, potmax, potmin]
-    print('Job complete:\n  InchiKey: {:}\n  Max. Pot: {:}\n  Min. Pot: {:}\n'.format(key, potmax, potmin))
+    LOGGER.info('Job complete:\n  InchiKey: {:}\n  Max. Pot: {:}\n  Min. Pot: {:}\n'.format(key, potmax, potmin))
     
     return result
-
-#load files and extract atom coordinates and the inchikey
-onlyfiles = [f for f in listdir('nicola') if isfile(join('nicola', f))]
-files = sorted([i for i in onlyfiles if '.pdb' in i])
-
-print(calc(files[354], '6-31g*'))

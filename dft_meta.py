@@ -10,26 +10,29 @@ import csv
     
 lines = []
 
-with open('6-311g**_complete.csv', 'r') as db:
+with open('nwchem_results.csv', 'r') as db:
      reader = csv.reader(db)
      for row in reader:
          alpha, beta, function = None, None, None
-         with open('nicola/_{:}.metadata'.format(row[0]), 'r') as f:
-              lineList = f.readlines()
-              dataList = [i.split('     ') for i in lineList]
-              for d in dataList:
-     	           if d[0] == 'ExpBeta':
-     	                beta = float(d[1].strip())
-     	           elif d[0] == 'ExpAlpha':
-     	                alpha = float(d[1].strip())
-     	           elif 'OldClassType' in d[0]:
-     	                function = d[0].strip().split('  ')[2]
+         try:
+             with open('nicola/_{:}.metadata'.format(row[0]), 'r') as f:
+                 lineList = f.readlines()
+                 dataList = [i.split('     ') for i in lineList]
+                 for d in dataList:
+                     if d[0] == 'ExpBeta':
+                         beta = float(d[1].strip())
+                     elif d[0] == 'ExpAlpha':
+                         alpha = float(d[1].strip())
+                     elif 'OldClassType' in d[0]:
+                         function = d[0].strip().split('  ')[2]
+         except:
+             pass
          
          row.extend([alpha, beta, function])
          lines.append(row)
      db.close()
 
-with open('6-311g**_complete.csv', 'w') as writeFile:
+with open('nwchem_results.csv', 'w') as writeFile:
      writer = csv.writer(writeFile)
      writer.writerows(lines)
      writeFile.close()
