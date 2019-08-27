@@ -44,11 +44,15 @@ end = int(input("Enter index of final file: "))
 
 for file in files[start:end]:
     LOGGER.info("Molecule started {:}".format(time.ctime()))
-    result = nicola_dft_reader.calc(file, basis, 0)
-    result2 = nicola_dft_reader.calc(file, basis, 1)
-    result3 = nicola_dft_reader.calc(file, basis, 2)
-    results.append(result)
-    results.append(result2)
-    results.append(result3)
+    
+    cycle_res = []
+    for cycle in range(3):
+        result = nicola_dft_reader.calc(file, basis, cycle)
+        cycle_res.append(result)
+    
+    potmax = max([result[1] for result in cycle_res])
+    potmin = min([result[2] for result in cycle_res])
+    name = cycle_res[0][0]
+    results.append([name, potmax, potmin])
 
 SaveResults(results, basis)

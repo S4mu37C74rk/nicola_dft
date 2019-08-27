@@ -94,7 +94,7 @@ def BuildandOptimise(atomcoordinates, basis):
     method = dft.RKS(molecule)
     method.grids.prune = dft.gen_grid.treutler_prune
     method.grids.atom_grid = {"H": (50, 194), "O": (50, 194),}
-    method.xc = 'wB97x'
+    method.xc = 'b3lyp'
     method.scf()
     
     return molecule, method
@@ -162,13 +162,13 @@ def calc(file, basis, cycle):
     cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1(), resolution=(1/6))
     array, dim_array = ConvertCubetoArray('{:}_den.cube'.format(key))
     #os.remove('{:}_den.cube'.format(key))
-    LOGGER.info('Generating isosurface ...  ', end='')
+    LOGGER.info('Generating isosurface ...  ')
     isosurface, volume = CalcIsosurface(array, dim_array)
     del array
     LOGGER.info('Complete')
                     
     #call function that produces numpy array with potential at index 0, followed by x, y, and z coordinates
-    LOGGER.info('Generating molecular electrostatic potential surface...  ', end='')
+    LOGGER.info('Generating molecular electrostatic potential surface...  ')
     LOGGER.debug(isosurface)
     mep_arr = mep(isosurface, molecule, method.make_rdm1())
     LOGGER.debug(mep_arr)
