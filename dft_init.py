@@ -20,13 +20,21 @@ def SaveResults(results, basis):
     '''Save extracted results to a .csv file with the InchiKey. Suffixed with
        the basis used.
     '''
+    with open('results_{:}.csv'.format(basis), 'r') as db:
+        reader = csv.reader(db)
+        
+        data = []
+        for row in reader:
+            data.append(row)
+        data.append(results)
+        db.close()
+    
     with open('results_{:}.csv'.format(basis), 'w') as db:
-          writer = csv.writer(db)
-          writer.writerows(results)
-    db.close()
+        writer = csv.writer(db)
+        writer.writerows(data)
+        db.close()
     pass
 
-results = []
 #load files and extract atom coordinates and the inchikey
 onlyfiles = [f for f in listdir('nicola') if isfile(join('nicola', f))]
 files = sorted([i for i in onlyfiles if '.pdb' in i])
@@ -45,14 +53,16 @@ end = int(input("Enter index of final file: "))
 for file in files[start:end]:
     LOGGER.info("Molecule started {:}".format(time.ctime()))
     
-    cycle_res = []
-    for cycle in range(3):
-        result = nicola_dft_reader.calc(file, basis, cycle)
-        cycle_res.append(result)
+    try:
+        cycle_res = []
+        for cycle in range(3):
+            result = nicola_dft_reader.calc(file, basis, cycle)
+            cycle_res.append(result)
+        
+        potmax = max([result[1] for result in cycle_res])
+        potmin = min([result[2] for result in cycle_res])
+        name = cycle_res[0][0]
+        SaveResults([name, potmax, potmin], basis)
     
-    potmax = max([result[1] for result in cycle_res])
-    potmin = min([result[2] for result in cycle_res])
-    name = cycle_res[0][0]
-    results.append([name, potmax, potmin])
-
-SaveResults(results, basis)
+    except:
+        LOGGER.error("Calculation failed - continuing")

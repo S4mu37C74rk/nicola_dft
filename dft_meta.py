@@ -10,7 +10,7 @@ import csv
     
 lines = []
 
-with open('nwchem_results.csv', 'r') as db:
+with open('Experiment_complete.csv', 'r') as db:
      reader = csv.reader(db)
      for row in reader:
          alpha, beta, function = None, None, None
@@ -32,7 +32,7 @@ with open('nwchem_results.csv', 'r') as db:
          lines.append(row)
      db.close()
 
-with open('nwchem_results.csv', 'w') as writeFile:
+with open('Experiment_complete.csv', 'w') as writeFile:
      writer = csv.writer(writeFile)
      writer.writerows(lines)
      writeFile.close()
