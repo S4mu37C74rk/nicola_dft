@@ -161,7 +161,7 @@ def calc(file, basis, cycle):
     molecule, method = BuildandOptimise(atom_coords, basis)
     cubegen.density(molecule, '{:}_den.cube'.format(key), method.make_rdm1(), resolution=(1/6))
     array, dim_array = ConvertCubetoArray('{:}_den.cube'.format(key))
-    #os.remove('{:}_den.cube'.format(key))
+    os.remove('{:}_den.cube'.format(key))
     LOGGER.info('Generating isosurface ...  ')
     isosurface, volume = CalcIsosurface(array, dim_array)
     del array
