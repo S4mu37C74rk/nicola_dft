@@ -20,14 +20,17 @@ def SaveResults(results, basis):
     '''Save extracted results to a .csv file with the InchiKey. Suffixed with
        the basis used.
     '''
-    with open('results_{:}.csv'.format(basis), 'r') as db:
-        reader = csv.reader(db)
+    try:
+        with open('results_{:}.csv'.format(basis), 'r') as db:
+            reader = csv.reader(db)
         
-        data = []
-        for row in reader:
-            data.append(row)
-        data.append(results)
-        db.close()
+            data = []
+            for row in reader:
+                data.append(row)
+            data.append(results)
+            db.close()
+    except:
+        pass
     
     with open('results_{:}.csv'.format(basis), 'w') as db:
         writer = csv.writer(db)
@@ -53,16 +56,14 @@ end = int(input("Enter index of final file: "))
 for file in files[start:end]:
     LOGGER.info("Molecule started {:}".format(time.ctime()))
     
-    try:
-        cycle_res = []
-        for cycle in range(3):
-            result = nicola_dft_reader.calc(file, basis, cycle)
-            cycle_res.append(result)
-        
-        potmax = max([result[1] for result in cycle_res])
-        potmin = min([result[2] for result in cycle_res])
-        name = cycle_res[0][0]
-        SaveResults([name, potmax, potmin], basis)
     
-    except:
-        LOGGER.error("Calculation failed - continuing")
+    cycle_res = []
+    for cycle in range(3):
+        result = nicola_dft_reader.calc(file, basis, cycle)
+        cycle_res.append(result)
+    
+    potmax = max([result[1] for result in cycle_res])
+    potmin = min([result[2] for result in cycle_res])
+    name = cycle_res[0][0]
+    SaveResults([name, potmax, potmin], basis)
+        
