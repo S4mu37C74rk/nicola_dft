@@ -20,18 +20,18 @@ def SaveResults(results, basis):
     '''Save extracted results to a .csv file with the InchiKey. Suffixed with
        the basis used.
     '''
+    data = []
     try:
         with open('results_{:}.csv'.format(basis), 'r') as db:
             reader = csv.reader(db)
-        
-            data = []
+
             for row in reader:
                 data.append(row)
-            data.append(results)
             db.close()
     except:
         pass
-    
+    data.append(results)
+
     with open('results_{:}.csv'.format(basis), 'w') as db:
         writer = csv.writer(db)
         writer.writerows(data)
