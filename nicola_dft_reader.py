@@ -95,7 +95,7 @@ def BuildandOptimise(atomcoordinates, basis):
     method = dft.RKS(molecule)
     method.grids.prune = dft.gen_grid.treutler_prune
     method.grids.atom_grid = {"H": (50, 194), "O": (50, 194),}
-    method.xc = 'b3lyp'
+    method.xc = 'wB97x'
     method.scf()
     
     return molecule, method

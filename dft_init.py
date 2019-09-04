@@ -49,7 +49,7 @@ for file in files:
     elif search in file:
         LOGGER.info("Requested file at index {:}".format(files.index(file)))
 
-basis = '6-311G**'
+basis = 'def2-TZVPP'
 start = int(input("Enter index of first file: "))
 end = int(input("Enter index of final file: "))
 
@@ -58,7 +58,7 @@ for file in files[start:end]:
     
     
     cycle_res = []
-    for cycle in range(3):
+    for cycle in range(1):
         result = nicola_dft_reader.calc(file, basis, cycle)
         cycle_res.append(result)
     
