@@ -10,6 +10,7 @@ from pyscf import dft
 from pyscf import lib
 from pyscf import df
 from pyscf import __config__
+import os
 
 setattr(__config__, 'cubegen_box_margin', 5.0)
 from pyscf.tools import cubegen
